@@ -5,6 +5,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const rateLimiter = require("express-rate-limit");
+const { errorHandler } = require("./middleware/errorHandling.middleware");
+const { responseHandler } = require("./middleware/response.middleware");
+
 
 const app = express();
 
@@ -28,10 +31,13 @@ app.use(morgan('combined'));
 app.use(express.json())
 app.use(bodyParser.json());
 
-
+app.use(responseHandler)
 
 app.get('/', (req, res) => {
     res.send("Hello word, welcome to Favour's final year project")
 })
+
+
+app.use(errorHandler);
 
 module.exports = app;

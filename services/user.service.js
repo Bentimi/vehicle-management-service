@@ -1,18 +1,19 @@
 const User = require('../models/user.model')
 const bcrypt = require("bcryptjs");
+const AppError = require('../utils/AppError.utils');
 require("dotenv").config();
 
 
 
 const userSignUp = async (data) => {
     if (!data.first_name || !data.last_name || !data.email || !data.password) {
-        throw new Error("All fields required", 400)
+        throw new AppError("All fields required", 400)
     }
 
     const existingEmail = await User.findOne({ email: data.email })
 
     if (existingEmail) {
-        throw new Error("Email already exists", 409)
+        throw new AppError("Email already exists", 409)
     }
 
     const hashedpwd = await bcrypt.hash(data.password, 10)
