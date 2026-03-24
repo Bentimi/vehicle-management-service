@@ -35,7 +35,18 @@ const userSignUp = async (data) => {
     return user;
 }
 
+const getUsers = async (page, pageSize) => {
+    const users = await User.find({})
+    .skip((page - 1) * pageSize)
+    .limit(pageSize)
+    .select('-password')
+    .lean()
+
+    return users;
+}
+
 
 module.exports = {
-    userSignUp
+    userSignUp,
+    getUsers
 }
