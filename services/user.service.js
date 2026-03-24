@@ -1,6 +1,7 @@
 const User = require('../models/user.model')
 const bcrypt = require("bcryptjs");
 const AppError = require('../utils/AppError.utils');
+const { generateRegNumber } = require('../utils/generateNumbers.utils');
 require("dotenv").config();
 
 
@@ -22,11 +23,16 @@ const userSignUp = async (data) => {
         first_name: data.first_name,
         last_name: data.last_name,
         email: data.email,
-        password: hashedpwd
+        password: hashedpwd,
+        reg_number: await generateRegNumber()
     })
 
     await newUser.save();
+    
+    const user = newUser.toObject();
+    delete user.password;
 
+    return user;
 }
 
 

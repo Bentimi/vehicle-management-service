@@ -2,3 +2,5 @@
 .env
 
 keys.js
+test-signup.js
+test.js

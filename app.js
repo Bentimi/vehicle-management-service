@@ -5,6 +5,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const rateLimiter = require("express-rate-limit");
+const userRoutes = require("./routes/user.route")
 const { errorHandler } = require("./middleware/errorHandling.middleware");
 const { responseHandler } = require("./middleware/response.middleware");
 
@@ -37,6 +38,8 @@ app.get('/', (req, res) => {
     res.send("Hello word, welcome to Favour's final year project")
 })
 
+
+app.use('/user', userRoutes);
 
 app.use(errorHandler);
 
