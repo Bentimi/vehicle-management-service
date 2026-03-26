@@ -46,7 +46,7 @@ const userLogin = async (data) => {
     })
 
     if (!user.active) {
-        throw new AppError("Account is deactivated", 403)
+        throw new AppError("Account not active", 403)
     }
 
     const comparedPassword = await bcrypt.compare(data.password, user.password)
@@ -81,9 +81,64 @@ const getUsers = async (page, pageSize, userId) => {
     return users;
 }
 
+const userProfile = async (userId, targetId) => {
+    const userAuth = await User.findById(userId);
+
+    if (!userAuth.active) {
+        throw new AppError("Account is not activated", 401);
+    }
+
+    if (userAuth._id !== targetId || (!userAuth.role === "admin" || !userAuth.role === "cso")) {
+        throw new AppError("Unauthorized user", 403);
+    } 
+
+    const user = await User.findById(targetId);
+
+    if (!user) {
+        throw new AppError("User not found", 400)
+    }
+
+    return user;
+}
+
+const updateProfile = async (userId, targetId, data) => {
+    const userAuth = await User.findById(userId);
+
+    if (!userAuth.active) {
+        throw new AppError("Account is not activated", 401);
+    }
+
+    if (userAuth._id !== targetId || (!userAuth.role === "admin" || !userAuth.role === "cso")) {
+        throw new AppError("Unauthorized user", 403);
+    } 
+
+    if (!data.first_name || !data.last_name || !data.email || !data.phone_number || !data.gender || !data.marital_status) {
+        throw new AppError("All fields required", 400);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+        targetId,
+        {
+            first_name: data.first_name,
+            last_name: data.last_name,
+            phone_number: data.phone_number,
+            gender: data.gender,
+            marital_status: data.marital_status
+        }
+    )
+
+    if (!updatedUser) {
+        throw new AppError("user not found", 400)
+    }
+
+    return { user: updatedUser }
+}
+
 
 module.exports = {
     userSignUp,
     userLogin,
-    getUsers
+    getUsers,
+    userProfile,
+    updateProfile
 }

@@ -180,10 +180,31 @@ const user_logout = async (req, res, next) => {
     }
 }
 
+const userActions = async (req, res, next) => {
+    try {
+
+        const method = req.method.toLowerCase();
+        const targetId = req.params.id;
+        const userId = req.user.id;
+
+        const actions = {
+            get: async () => await userService.userProfile(userId, targetId),
+            put: async () => await userService.updateProfile(userId, targetId, req.body)
+        }
+        if (!actions[method]) return res.status(405).end();
+        const result = await actions[method]();
+
+        res.success(result, "user profile")
+    } catch (e) {
+        next(e);
+    }
+}
+
 module.exports = {
     user_signUp,
     user_login,
     refresh_token,
     user_logout,
-    get_users
+    get_users,
+    userActions
 }
