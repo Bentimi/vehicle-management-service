@@ -35,7 +35,43 @@ const userSignUp = async (data) => {
     return user;
 }
 
-const getUsers = async (page, pageSize) => {
+
+const userLogin = async (data) => {
+    if (!data.email || !data.password) {
+        throw new AppError("All fields required", 400);
+    }
+
+    const user = await User.findOne({
+        email: data.email
+    })
+
+    if (!user.active) {
+        throw new AppError("Account is deactivated", 403)
+    }
+
+    const comparedPassword = await bcrypt.compare(data.password, user.password)
+
+    if (!comparedPassword) {
+        throw new AppError("Invalid credentials", 401)
+    }
+
+    const userData = user.toObject();
+    delete userData.password;
+
+    return { user: userData };
+}
+
+const getUsers = async (page, pageSize, userId) => {
+    const userAuth = await User.findById(userId)
+
+    if (!userAuth.active) {
+        throw new AppError('Account is not active', 401)
+    }
+
+    if (userAuth.role === "user" || userAuth.role === "staff") {
+        throw new AppError("Unauthorized user", 403)
+    }
+
     const users = await User.find({})
     .skip((page - 1) * pageSize)
     .limit(pageSize)
@@ -48,5 +84,6 @@ const getUsers = async (page, pageSize) => {
 
 module.exports = {
     userSignUp,
+    userLogin,
     getUsers
 }

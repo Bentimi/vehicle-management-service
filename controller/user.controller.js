@@ -1,3 +1,6 @@
+const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require("uuid");
+const client = require("../config/redis");
 const userService = require('../services/user.service');
 
 
@@ -11,12 +14,167 @@ const user_signUp = async (req, res, next) => {
     }
 }
 
+const user_login = async (req, res, next) => {
+    try {
+        const data = req.body;
+        const loginResponse = await userService.userLogin(data);
+        const user = loginResponse.user;
+
+        const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '15m'
+        });
+
+        const newJti = uuidv4();
+        const newRefreshToken = jwt.sign({ userId: user._id, jti: newJti }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, {
+            expiresIn: '7d'
+        });
+
+        await client.setEx(`refresh_token:${user._id}:${newJti}`, 7 * 24 * 60 * 60, '1');
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        const csrfToken = uuidv4();
+        res.cookie('csrfToken', csrfToken, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+        });
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.success({ user }, "Login successful")
+    } catch (e) {
+        next(e);
+    }
+}
+
+const refresh_token = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.cookies;
+        if (!refreshToken) {
+            return res.status(401).json({ status: 'error', message: 'No refresh token provided' });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({ status: 'error', message: 'Invalid refresh token' });
+        }
+
+        const { userId, jti } = decoded;
+
+        // Check Redis for JTI
+        const isValid = await client.get(`refresh_token:${userId}:${jti}`);
+
+        if (!isValid) {
+            // Token Reuse Detection
+            const keys = await client.keys(`refresh_token:${userId}:*`);
+            if (keys.length > 0) {
+                await client.del(keys); // Invalidate all refresh tokens for user
+            }
+            return res.status(403).json({ status: 'error', message: 'Token reuse detected. Please login again.' });
+        }
+
+        // Invalidate old JTI
+        await client.del(`refresh_token:${userId}:${jti}`);
+
+        const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
+            expiresIn: '15m'
+        });
+
+        const newJti = uuidv4();
+        const newRefreshToken = jwt.sign({ userId, jti: newJti }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, {
+            expiresIn: '7d'
+        });
+
+        await client.setEx(`refresh_token:${userId}:${newJti}`, 7 * 24 * 60 * 60, '1');
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        const csrfToken = uuidv4();
+        res.cookie('csrfToken', csrfToken, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+        });
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.success(null, "Token refreshed successfully");
+    } catch (e) {
+        next(e);
+    }
+}
+
 const get_users = async (req, res, next) => {
     try {
+        const userId = req.user.id
+        // console.log(userId)
         const page = req.query.page || 1;
         const pageSize = req.query.pageSize || 10;
-        const users = await userService.getUsers(page, pageSize);
+        const users = await userService.getUsers(page, pageSize, userId);
         res.success(users, "Users successfully retrieved")
+    } catch (e) {
+        next(e);
+    }
+}
+
+const user_logout = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.cookies;
+        if (refreshToken) {
+            try {
+                // Ignore expiration so we can delete the record even if the token just expired
+                const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, { ignoreExpiration: true });
+                const { userId, jti } = decoded;
+                if (userId && jti) {
+                    await client.del(`refresh_token:${userId}:${jti}`);
+                }
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+        
+        res.clearCookie('csrfToken', {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+
+        res.clearCookie('accessToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+
+        res.success(null, "Logged out successfully");
     } catch (e) {
         next(e);
     }
@@ -24,5 +182,8 @@ const get_users = async (req, res, next) => {
 
 module.exports = {
     user_signUp,
+    user_login,
+    refresh_token,
+    user_logout,
     get_users
 }
