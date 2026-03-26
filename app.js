@@ -5,7 +5,8 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const rateLimiter = require("express-rate-limit");
-const userRoutes = require("./routes/user.route")
+const userRoutes = require("./routes/user.route");
+const vehicleRoutes = require("./routes/vehicle.route");
 const { errorHandler } = require("./middleware/errorHandling.middleware");
 const { responseHandler } = require("./middleware/response.middleware");
 
@@ -39,6 +40,7 @@ app.get('/', (req, res) => {
 
 
 app.use('/user', userRoutes);
+app.use('/vehicle', vehicleRoutes);
 
 app.use(errorHandler);
 
