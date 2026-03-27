@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const vehicleSchema = new mongoose.schema({
-    vehicle_number: {
+    plate_number: {
         type: String,
         unique: true,
         required: true,
@@ -42,7 +42,9 @@ const vehicleSchema = new mongoose.schema({
         default: false
     },
     created_by: {
-
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     }
 }, {
     timestamps: true,
