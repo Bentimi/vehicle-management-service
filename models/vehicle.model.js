@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const vehicleSchema = new mongoose.schema({
+const vehicleSchema = new mongoose.Schema({
     plate_number: {
         type: String,
         unique: true,

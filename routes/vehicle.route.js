@@ -6,7 +6,7 @@ const validatedVehicle = require("../utils/vehicleDatavalidation.utils");
 
 router.post('/register', requireAuth, validatedVehicle.validatedVehicleSchema, vehicleController.register_vehicle),
 router.route('/:id')
-// .get(requireAuth),
+.get(requireAuth, vehicleController.vehicleActions)
 .put(requireAuth, validatedVehicle.validatedUpdateVehicleSchema, vehicleController.register_vehicle)
 
 

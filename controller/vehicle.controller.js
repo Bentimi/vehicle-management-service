@@ -16,7 +16,30 @@ const register_vehicle = async (req, res, next) => {
     }
 }
 
+const vehicleActions = async (req, res, next) => {
+    try {
+
+        const method = req.method.toLowerCase();
+        const vehicleId = req.params.id;
+        const userId = req.user.id;
+
+        const actions = {
+            get: async () =>  await vehicleService.vehicleProfile(userId, vehicleId),
+            put: async () => await vehicleService.updateVehicle(req.body, userId, vehicleId)
+        }
+
+        if (!actions[method]) return res.status(405).end();
+        const result = await actions[method]();
+
+        res.success(result, "vehicle profile")
+
+    } catch (e) {
+        next(e)
+    }
+}
+
 
 module.exports = {
-    register_vehicle
+    register_vehicle,
+    vehicleActions
 }
