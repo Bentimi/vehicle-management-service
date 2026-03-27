@@ -25,7 +25,8 @@ const vehicleActions = async (req, res, next) => {
 
         const actions = {
             get: async () =>  await vehicleService.vehicleProfile(userId, vehicleId),
-            put: async () => await vehicleService.updateVehicle(req.body, userId, vehicleId)
+            put: async () => await vehicleService.updateVehicle(req.body, userId, vehicleId),
+            patch: async () => await vehicleService.uploadVehicleImage(req.file, userId, vehicleId)
         }
 
         if (!actions[method]) return res.status(405).end();

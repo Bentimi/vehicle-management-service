@@ -129,12 +129,40 @@ const updateVehicle = async (data, userId, vehicleId) => {
 
 };
 
-// const upload = async (data, useId, vehicleId) => {
+const uploadVehicleImage = async (data, userId, vehicleId) => {
 
-// }
+    const userAuth = await User.findById(userId);
+
+    if (!userAuth.active) {
+        throw new AppError("Account not active", 401)
+    }
+
+    if (userAuth.role === "staff" || userAuth.role === "user") {
+        throw new AppError("Unauthorized user", 403)
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(vehicleId)) {
+        throw new AppError("Invalid vehicle ID", 400)
+    }
+
+    const existingVehicle = await Vehicle.findById(vehicleId);
+
+    if (!existingVehicle) {
+        throw new AppError("Vehicle not found");
+    }
+
+    const uploadedImage = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'vehicle_images',
+        public_id: `vehicle_${existingVehicle._id}`
+    })
+
+    existingVehicle.image = uploadedImage.secure_url;
+    await existingVehicle.save();
+}
 
 module.exports = {
     registerVehicle,
     vehicleProfile,
-    updateVehicle
+    updateVehicle,
+    uploadVehicleImage
 }

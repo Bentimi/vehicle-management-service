@@ -18,8 +18,14 @@ const updateVehicleSchema = joi.object({
     model: joi.string().trim().required()
 });
 
+const uploadVehicleImage = joijoi.object({
+    image: joi.any()
+    .required()
+    .description('Image file')
+})
 
 module.exports = {
     validatedVehicleSchema: validate(vehicleSchema),
-    validatedUpdateVehicleSchema: validate(updateVehicleSchema)
+    validatedUpdateVehicleSchema: validate(updateVehicleSchema),
+    validatedVehicleImage: validate(uploadVehicleImage)
 }

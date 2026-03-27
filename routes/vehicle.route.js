@@ -8,6 +8,7 @@ router.post('/register', requireAuth, validatedVehicle.validatedVehicleSchema, v
 router.route('/:id')
 .get(requireAuth, vehicleController.vehicleActions)
 .put(requireAuth, validatedVehicle.validatedUpdateVehicleSchema, vehicleController.register_vehicle)
+.patch(requireAuth, validatedVehicle.validatedVehicleImage, vehicleController.register_vehicle)
 
 
 module.exports = router;
