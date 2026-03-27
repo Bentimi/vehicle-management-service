@@ -4,7 +4,8 @@ const vehicleSchema = new mongoose.schema({
     vehicle_number: {
         type: String,
         unique: true,
-        required: true
+        required: true,
+        uppercase: true
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -18,6 +19,30 @@ const vehicleSchema = new mongoose.schema({
     image: {
         type: String,
         default: null
+    },
+    vehicle_type: {
+        type: String,
+        enum: ["car", "bike", "bus", "truck"],
+        default: null
+    },
+    color: {
+        type: String,
+        default: null
+    },
+    model: {
+        type: String,
+        default: null
+    },
+    qrCode: {
+        type: String,
+        default: null
+    },
+    isBlacklisted: {
+        type: Boolean,
+        default: false
+    },
+    created_by: {
+
     }
 }, {
     timestamps: true,

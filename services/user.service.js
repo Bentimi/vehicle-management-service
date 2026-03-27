@@ -7,7 +7,7 @@ require("dotenv").config();
 
 
 const userSignUp = async (data) => {
-    if (!data.first_name || !data.last_name || !data.email || !data.password) {
+    if (!data.first_name || !data.last_name || !data.email || !data.password || !data.gender) {
         throw new AppError("All fields required", 400)
     }
 
@@ -23,6 +23,7 @@ const userSignUp = async (data) => {
         first_name: data.first_name,
         last_name: data.last_name,
         email: data.email,
+        gender: data.gender,
         password: hashedpwd,
         reg_number: await generateRegNumber()
     })
@@ -54,6 +55,13 @@ const userLogin = async (data) => {
     if (!comparedPassword) {
         throw new AppError("Invalid credentials", 401)
     }
+
+    const updateUserLogin = await User.findByIdAndUpdate(
+        user._id,
+        {
+            last_login: new Date()
+        }
+    )
 
     const userData = user.toObject();
     delete userData.password;

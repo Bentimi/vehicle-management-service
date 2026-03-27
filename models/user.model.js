@@ -33,14 +33,17 @@ const userSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ['male', 'female', 'others']
+        enum: ['male', 'female', 'others'],
+        default: null
     },
     marital_status: {
         type: String,
-        enum: ['married', 'single', 'divorced', 'complicated']
+        enum: ['married', 'single', 'divorced', 'complicated'],
+        default: null
     },
     last_login: {
-        type: Date
+        type: Date,
+        default: null
     },
     active: {
         type: Boolean,
