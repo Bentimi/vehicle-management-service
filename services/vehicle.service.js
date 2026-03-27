@@ -17,12 +17,18 @@ const registerVehicle = async (data, userId) => {
         throw new AppError("All fields required", 400)
     }
 
-    const existingUser = await User.findOne(data.user)
+    const existingUser = await User.findOne({
+        $or: [
+            { email: data.user },
+            { phone_number: data.user }
+        ]
+    });
+
     if (!existingUser) {
         throw new AppError("User not found", 400)
     }
 
-    const newVehicle = await Vehicle({
+    const newVehicle = new Vehicle({
         plate_number: data.plate_number,
         user: existingUser._id,
         vehicle_description: data.vehicle_description,
@@ -32,6 +38,9 @@ const registerVehicle = async (data, userId) => {
         created_by: userAuth._id
     })
 
+    await newVehicle.save()
+
+    return { vehicle: newVehicle }
 
 }
 
