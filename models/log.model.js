@@ -6,12 +6,31 @@ const logSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
-    signIn_Date: {
-        type: Date,
-        default: null
+    vehicle: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Vehicle",
+        required: true
     },
-    signOut_Date: {
+    entryTime: {
         type: Date,
+        default: Date.now
+    },
+    exitTime: {
+        type: Date,
+        default: null,
+    },
+    status: {
+        type: String,
+        enum: ["IN", "OUT"],
+        default: "IN"
+    },
+    scannedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    duration: {
+        type: Number,
         default: null
     }
 
