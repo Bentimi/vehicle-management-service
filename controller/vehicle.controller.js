@@ -29,12 +29,27 @@ const vehicleActions = async (req, res, next) => {
             patch: async () => await vehicleService.uploadVehicleImage(req.file, userId, vehicleId)
         }
 
-        if (!actions[method]) return res.status(405).end();
+         if (!actions[method]) {
+            return res.status(405).json({
+                status: false,
+                message: "Method not allowed"
+            });
+        }
+
         const result = await actions[method]();
 
-        res.success(result, "vehicle profile")
+        if (method === 'put' || method === 'patch') {
+            res.status(200).json({
+                status: true,
+                message: "Vehicle updated successfully",
+                data: result
+            });
+        } else {
+            res.success(result, "vehicle profile");
+        }
 
     } catch (e) {
+        console.log(e)
         next(e)
     }
 }

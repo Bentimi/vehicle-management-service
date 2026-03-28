@@ -7,6 +7,7 @@ const helmet = require("helmet");
 const rateLimiter = require("express-rate-limit");
 const userRoutes = require("./routes/user.route");
 const vehicleRoutes = require("./routes/vehicle.route");
+const logRoutes = require("./routes/log.route");
 const { errorHandler } = require("./middleware/errorHandling.middleware");
 const { responseHandler } = require("./middleware/response.middleware");
 
@@ -41,6 +42,7 @@ app.get('/', (req, res) => {
 
 app.use('/user', userRoutes);
 app.use('/vehicle', vehicleRoutes);
+app.use('/log', logRoutes);
 
 app.use(errorHandler);
 

@@ -46,6 +46,10 @@ const userLogin = async (data) => {
         email: data.email
     })
 
+    if (!user) {
+        throw new AppError("Invalid creadentials", 404)
+    }
+
     if (!user.active) {
         throw new AppError("Account not active", 403)
     }
@@ -132,7 +136,8 @@ const updateProfile = async (userId, targetId, data) => {
             phone_number: data.phone_number,
             gender: data.gender,
             marital_status: data.marital_status
-        }
+        },
+        { new: true }
     )
 
     if (!updatedUser) {

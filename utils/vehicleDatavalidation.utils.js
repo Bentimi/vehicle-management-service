@@ -18,7 +18,7 @@ const updateVehicleSchema = joi.object({
     model: joi.string().trim().required()
 });
 
-const uploadVehicleImage = joijoi.object({
+const uploadVehicleImage = joi.object({
     image: joi.any()
     .required()
     .description('Image file')
