@@ -73,6 +73,40 @@ const checkVehicle = async (data, userId) => {
     }
 }
 
+const logHistory= async (vehicleId, userId, page, pageSize) => {
+    const userAuth = await User.findById(userId);
+
+    if (!userAuth.active) {
+        throw new AppError("Account not active", 401)
+    }
+
+    if (userAuth.role === "user" || userAuth.role === "staff") {
+        throw new AppError("Unauthorized user", 403)
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(vehicleId)) {
+        throw new AppError("Invalid vehicle ID", 400)
+    }
+
+    const getLog = await Log.find({
+        vehicle: vehicleId
+    })
+    .populate("user", "-password")
+    .populate("vehicle")
+    .populate("scannedBy", "-password")
+    .sort({ entryTime: - 1 })
+    .skip((page - 1) * pageSize)
+    .limit(pageSize)
+    .lean()
+
+    if (!getLog || getLog.length === 0) {
+        throw new AppError("No log found", 404)
+    }
+
+    return { log: getLog }
+}
+
 module.exports = {
-    checkVehicle
+    checkVehicle,
+    logHistory
 }
