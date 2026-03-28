@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
+const { xss } = require('express-xss-sanitizer');
 const rateLimiter = require("express-rate-limit");
 const userRoutes = require("./routes/user.route");
 const vehicleRoutes = require("./routes/vehicle.route");
@@ -32,6 +33,7 @@ app.use(cors({
 app.use(morgan('combined'));
 app.use(express.json())
 app.use(bodyParser.json());
+app.use(xss());
 
 app.use(responseHandler)
 
