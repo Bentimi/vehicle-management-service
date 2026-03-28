@@ -26,6 +26,10 @@ const checkVehicle = async (data, userId) => {
             throw new AppError("Vehicle not found", 404)
         }
 
+        if (existingVehicle.isBlacklist) {
+            throw new AppError("Vehicle was blacklisted", 403)
+        }
+
         const recentLog = await Log.findOne(
             { 
                 vehicle: existingVehicle._id,

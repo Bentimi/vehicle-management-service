@@ -54,15 +54,16 @@ const vehicleActions = async (req, res, next) => {
     }
 }
 
-const vichcle_blacklist = async (req, res, next) => {
+const vehicle_blacklist = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const vehicleId = req.params.id
 
-        const vehicle = await vehicleService(userId, vehicleId);
+        const vehicle = await vehicleService.vehicleBlackList(userId, vehicleId);
 
         res.success(vehicle, "Vehicle profile successfully updated")
     } catch (e) {
+        console.log(e)
         next(e);
     }
 }
