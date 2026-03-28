@@ -238,9 +238,65 @@ const uploadVehicleImage = async (data, userId, vehicleId) => {
     return { vehicle: existingVehicle }
 }
 
+const vehicleBlackList = async (userId, vehicleId) => {
+    const userAuth = await User.findById(userId);
+
+    if (!userAuth.active) {
+        throw new AppError("Account not active", 401)
+    }
+
+    if (userAuth.role === "staff" || userAuth.role === "user") {
+        throw new AppError("Unauthorized user", 403);
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(vehicleId)) {
+        throw new AppError("Invalid vehicle ID", 400)
+    }
+
+    const existingVehicle = await Vehicle.findById(vehicleId)
+
+    if (userAuth._id === existingVehicle._id) {
+        throw new AppError("Unauthorized user", 403)
+    }
+
+    if (!existingVehicle) {
+        throw new AppError("Vehicle not found", 404)
+    }
+
+    const session = await session.startSession();
+    session.startTransaction();
+
+    try {
+
+        let updatedData;
+
+        if (existingVehicle.isBlacklisted) {
+            existingVehicle.isBlacklisted = false;
+            await existingVehicle.save({ session })
+            updatedData = existingVehicle;
+        } else {
+            existingVehicle.isBlacklisted = true;
+            await existingVehicle.save({ session })
+            updatedData = existingVehicle;
+        }
+
+        await session.commitTransaction();
+
+        return { data: updatedData };
+
+    } catch (e) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+    } finally {
+        await session.endSession();
+    }
+}
+
 module.exports = {
     registerVehicle,
     vehicleProfile,
     updateVehicle,
-    uploadVehicleImage
+    uploadVehicleImage,
+    vichleBlackList
 }

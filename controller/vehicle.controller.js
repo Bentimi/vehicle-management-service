@@ -54,8 +54,22 @@ const vehicleActions = async (req, res, next) => {
     }
 }
 
+const vichcle_blacklist = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const vehicleId = req.params.id
+
+        const vehicle = await vehicleService(userId, vehicleId);
+
+        res.success(vehicle, "Vehicle profile successfully updated")
+    } catch (e) {
+        next(e);
+    }
+}
+
 
 module.exports = {
     register_vehicle,
-    vehicleActions
+    vehicleActions,
+    vehicle_blacklist
 }

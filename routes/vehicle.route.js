@@ -10,6 +10,7 @@ router.route('/:id')
 .get(requireAuth, vehicleController.vehicleActions)
 .put(requireAuth, validatedVehicle.validatedUpdateVehicleSchema, vehicleController.vehicleActions)
 .patch(requireAuth, validatedVehicle.validatedVehicleImage, upload.single('image'), vehicleController.vehicleActions)
+router.put('/status', requireAuth, vehicleController.vehicle_blacklist);
 
 
 module.exports = router;
