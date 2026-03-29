@@ -20,9 +20,10 @@ const checkVehicle = async (data, userId) => {
 
     try {
         console.log(data)
+        console.log(data.vehicleId.vehicleId)
         let existingVehicle;
         if (mongoose.Types.ObjectId.isValid(data.vehicleId)) {
-            existingVehicle = await Vehicle.findById(data.vehicleId).session(session);
+            existingVehicle = await Vehicle.findById(data.vehicleId.vehicleId).session(session);
         } else {
             existingVehicle = await Vehicle.findOne({ plate_number: data.vehicleId }).session(session);
         }
