@@ -15,6 +15,8 @@ const { responseHandler } = require("./middleware/response.middleware");
 
 const app = express();
 
+app.set('trust proxy', 1); // Enable trust proxy for Render/Vercel secure cookies
+
 require("dotenv").config();
 
 // middleware

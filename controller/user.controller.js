@@ -3,6 +3,8 @@ const { v4: uuidv4 } = require("uuid");
 const client = require("../config/redis");
 const userService = require('../services/user.service');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 
 const user_signUp = async (req, res, next) => {
     try {
@@ -33,22 +35,22 @@ const user_login = async (req, res, next) => {
 
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         const csrfToken = uuidv4();
         res.cookie('csrfToken', csrfToken, {
             httpOnly: false,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
         });
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
@@ -102,22 +104,22 @@ const refresh_token = async (req, res, next) => {
 
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         const csrfToken = uuidv4();
         res.cookie('csrfToken', csrfToken, {
             httpOnly: false,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
         });
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
@@ -158,20 +160,20 @@ const user_logout = async (req, res, next) => {
 
         res.clearCookie('refreshToken', {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax'
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax'
         });
         
         res.clearCookie('csrfToken', {
             httpOnly: false,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax'
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax'
         });
 
         res.clearCookie('accessToken', {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax'
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax'
         });
 
         res.success(null, "Logged out successfully");
