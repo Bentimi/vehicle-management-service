@@ -42,9 +42,9 @@ app.get('/', (req, res) => {
 })
 
 
-app.use('/user', userRoutes);
-app.use('/vehicle', vehicleRoutes);
-app.use('/log', logRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/vehicle', vehicleRoutes);
+app.use('/api/log', logRoutes);
 
 app.use(errorHandler);
 

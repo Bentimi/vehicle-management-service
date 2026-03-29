@@ -2,6 +2,7 @@ const User = require('../models/user.model')
 const bcrypt = require("bcryptjs");
 const AppError = require('../utils/AppError.utils');
 const { generateRegNumber } = require('../utils/generateNumbers.utils');
+const { normalizePhoneNumber } = require('../utils/normalization.utils');
 require("dotenv").config();
 
 
@@ -73,7 +74,7 @@ const userLogin = async (data) => {
     return { user: userData };
 }
 
-const getUsers = async (page, pageSize, userId) => {
+const getUsers = async (page, pageSize, search, userId) => {
     const userAuth = await User.findById(userId)
 
     if (!userAuth.active) {
@@ -84,13 +85,24 @@ const getUsers = async (page, pageSize, userId) => {
         throw new AppError("Unauthorized user", 403)
     }
 
-    const users = await User.find({})
+    const query = {};
+    if (search) {
+        query.$or = [
+            { first_name: { $regex: search, $options: 'i' } },
+            { last_name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+            { reg_number: { $regex: search, $options: 'i' } }
+        ];
+    }
+
+    const total = await User.countDocuments(query);
+    const users = await User.find(query)
     .skip((page - 1) * pageSize)
     .limit(pageSize)
     .select('-password')
     .lean()
 
-    return users;
+    return { users, total };
 }
 
 const userProfile = async (userId, targetId) => {
@@ -100,7 +112,7 @@ const userProfile = async (userId, targetId) => {
         throw new AppError("Account is not activated", 401);
     }
 
-    if (userAuth._id !== targetId || (!userAuth.role === "admin" || !userAuth.role === "cso")) {
+    if (String(userAuth._id) !== String(targetId) && userAuth.role !== "admin" && userAuth.role !== "cso") {
         throw new AppError("Unauthorized user", 403);
     } 
 
@@ -120,12 +132,12 @@ const updateProfile = async (userId, targetId, data) => {
         throw new AppError("Account is not activated", 401);
     }
 
-    if (userAuth._id !== targetId || (!userAuth.role === "admin" || !userAuth.role === "cso")) {
+    if (String(userAuth._id) !== String(targetId) && userAuth.role !== "admin" && userAuth.role !== "cso") {
         throw new AppError("Unauthorized user", 403);
     } 
 
-    if (!data.first_name || !data.last_name || !data.email || !data.phone_number || !data.gender || !data.marital_status) {
-        throw new AppError("All fields required", 400);
+    if (!data.first_name || !data.last_name || !data.email) {
+        throw new AppError("First name, last name, and email are required", 400);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -133,7 +145,8 @@ const updateProfile = async (userId, targetId, data) => {
         {
             first_name: data.first_name,
             last_name: data.last_name,
-            phone_number: data.phone_number,
+            email: data.email,
+            phone_number: normalizePhoneNumber(data.phone_number),
             gender: data.gender,
             marital_status: data.marital_status
         },

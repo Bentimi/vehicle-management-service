@@ -12,5 +12,6 @@ router.route('/:id')
 .patch(requireAuth, validatedVehicle.validatedVehicleImage, upload.single('image'), vehicleController.vehicleActions)
 router.put('/status/:id', requireAuth, vehicleController.vehicle_blacklist);
 
+router.get('/', requireAuth, vehicleController.get_vehicles);
 
 module.exports = router;

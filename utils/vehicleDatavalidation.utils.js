@@ -24,8 +24,13 @@ const uploadVehicleImage = joi.object({
     .description('Image file')
 })
 
+const scanningData = joi.object({
+    vehicleId: joi.string().trim().required()
+})
+
 module.exports = {
     validatedVehicleSchema: validate(vehicleSchema),
     validatedUpdateVehicleSchema: validate(updateVehicleSchema),
-    validatedVehicleImage: validate(uploadVehicleImage)
+    validatedVehicleImage: validate(uploadVehicleImage),
+    validatedScanningData: validate(scanningData)
 }

@@ -18,8 +18,9 @@ const log_history = async (req, res, next) => {
         const userId = req.user.id;
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
+        const search = req.query.search || "";
 
-        const log = await logService.logHistory(vehicleId, userId, page, pageSize);
+        const log = await logService.logHistory(vehicleId, userId, page, pageSize, search);
 
         res.success(log, "Vehicle logs retrieved");
     } catch (e) {
@@ -27,8 +28,21 @@ const log_history = async (req, res, next) => {
         next(e);
     }
 }
+const get_logs = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const page = req.query.page || 1;
+        const pageSize = req.query.pageSize || 10;
+        
+        const result = await logService.getAllLogs(page, pageSize, userId);
+        res.success(result, "Logs successfully retrieved");
+    } catch (e) {
+        next(e);
+    }
+};
 
 module.exports = {
     check_vehicle,
-    log_history
+    log_history,
+    get_logs
 }

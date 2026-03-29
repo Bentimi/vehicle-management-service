@@ -130,11 +130,11 @@ const refresh_token = async (req, res, next) => {
 const get_users = async (req, res, next) => {
     try {
         const userId = req.user.id
-        // console.log(userId)
-        const page = req.query.page || 1;
-        const pageSize = req.query.pageSize || 10;
-        const users = await userService.getUsers(page, pageSize, userId);
-        res.success(users, "Users successfully retrieved")
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const search = req.query.search || '';
+        const usersData = await userService.getUsers(page, pageSize, search, userId);
+        res.success(usersData, "Users successfully retrieved")
     } catch (e) {
         next(e);
     }

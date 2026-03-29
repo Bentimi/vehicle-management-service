@@ -68,9 +68,24 @@ const vehicle_blacklist = async (req, res, next) => {
     }
 }
 
+const get_vehicles = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const search = req.query.search || '';
+        const owner = req.query.owner || null;
+        
+        const result = await vehicleService.getAllVehicles(page, pageSize, userId, search, owner);
+        res.success(result, "Vehicles successfully retrieved");
+    } catch (e) {
+        next(e);
+    }
+};
 
 module.exports = {
     register_vehicle,
     vehicleActions,
-    vehicle_blacklist
+    vehicle_blacklist,
+    get_vehicles
 }

@@ -25,9 +25,9 @@ const updateUserSchema = joi.object({
     first_name: joi.string().trim().required(),
     last_name: joi.string().trim().required(),
     email: joi.string().email().trim().required(),
-    phone_number: joi.string().trim().min(8).max(15).required(),
-    gender: joi.string().trim().valid("male", "female", "other").required(),
-    marital_status: joi.string().trim().valid("married", "single", "divorced", "complicated").required(),
+    phone_number: joi.string().trim().allow('', null).optional(),
+    gender: joi.string().trim().valid("male", "female", "other").allow('', null).optional(),
+    marital_status: joi.string().trim().valid("married", "single", "divorced", "complicated").allow('', null).optional(),
 })
 
 module.exports = {
