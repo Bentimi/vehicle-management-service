@@ -19,13 +19,27 @@ const checkVehicle = async (data, userId) => {
     session.startTransaction();
 
     try {
-        console.log(data)
-        console.log(data.vehicleId.vehicleId)
+        let vehicleIdentifier = data.vehicleId;
+
+        // If the scanned data is a JSON string, extract the actual ID
+        if (typeof vehicleIdentifier === 'string' && vehicleIdentifier.trim().startsWith('{')) {
+            try {
+                const parsed = JSON.parse(vehicleIdentifier);
+                if (parsed.vehicleId) {
+                    vehicleIdentifier = parsed.vehicleId;
+                }
+            } catch (err) {
+                // Not valid JSON, keep it as is
+            }
+        }
+
+        console.log(vehicleIdentifier)
+        
         let existingVehicle;
-        if (mongoose.Types.ObjectId.isValid(data.vehicleId)) {
-            existingVehicle = await Vehicle.findById(data.vehicleId.vehicleId).session(session);
+        if (mongoose.Types.ObjectId.isValid(vehicleIdentifier)) {
+            existingVehicle = await Vehicle.findById(vehicleIdentifier).session(session);
         } else {
-            existingVehicle = await Vehicle.findOne({ plate_number: data.vehicleId }).session(session);
+            existingVehicle = await Vehicle.findOne({ plate_number: vehicleIdentifier }).session(session);
         }
 
         if (!existingVehicle) {
