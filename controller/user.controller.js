@@ -54,7 +54,7 @@ const user_login = async (req, res, next) => {
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
-        res.success({ user }, "Login successful")
+        res.success({ user, csrfToken }, "Login successful")
     } catch (e) {
         next(e);
     }
@@ -123,7 +123,7 @@ const refresh_token = async (req, res, next) => {
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
-        res.success(null, "Token refreshed successfully");
+        res.success({ csrfToken }, "Token refreshed successfully");
     } catch (e) {
         next(e);
     }
