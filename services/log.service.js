@@ -19,7 +19,7 @@ const checkVehicle = async (data, userId) => {
     session.startTransaction();
 
     try {
-
+        console.log(data)
         let existingVehicle;
         if (mongoose.Types.ObjectId.isValid(data.vehicleId)) {
             existingVehicle = await Vehicle.findById(data.vehicleId).session(session);
