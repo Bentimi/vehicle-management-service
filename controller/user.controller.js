@@ -43,7 +43,7 @@ const user_login = async (req, res, next) => {
 
         const csrfToken = uuidv4();
         res.cookie('csrfToken', csrfToken, {
-            httpOnly: false,
+            httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? 'none' : 'lax',
         });
@@ -55,7 +55,7 @@ const user_login = async (req, res, next) => {
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
-        res.success({ user, csrfToken }, "Login successful")
+        res.success({ user }, "Login successful")
     } catch (e) {
         next(e);
     }
@@ -112,7 +112,7 @@ const refresh_token = async (req, res, next) => {
 
         const csrfToken = uuidv4();
         res.cookie('csrfToken', csrfToken, {
-            httpOnly: false,
+            httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? 'none' : 'lax',
         });
@@ -124,7 +124,7 @@ const refresh_token = async (req, res, next) => {
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
-        res.success({ csrfToken }, "Token refreshed successfully");
+        res.success(null, "Token refreshed successfully");
     } catch (e) {
         next(e);
     }
@@ -184,7 +184,7 @@ const user_logout = async (req, res, next) => {
         });
         
         res.clearCookie('csrfToken', {
-            httpOnly: false,
+            httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? 'none' : 'lax'
         });

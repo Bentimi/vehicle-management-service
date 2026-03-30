@@ -14,14 +14,11 @@ const requireAuth = async (req, res, next) => {
             throw new AppError("Authentication required. Please login.", 401);
         }
 
-        // Verify CSRF (Double Submit Cookie validation)
-        const headerCsrfToken = req.headers['x-csrf-token'];
-        
-        // Skip CSRF check for GET/HEAD/OPTIONS methods generally, but require it for state-changing methods
+        // Verify CSRF (Cookie presence validation)
         const isStateChangingMethod = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
         
         if (isStateChangingMethod) {
-            if (!csrfToken || !headerCsrfToken || csrfToken !== headerCsrfToken) {
+            if (!csrfToken) {
                 throw new AppError("CSRF verification failed.", 403);
             }
         }
