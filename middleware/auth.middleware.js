@@ -30,6 +30,16 @@ const requireAuth = async (req, res, next) => {
         const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
         req.user = { id: decoded.userId };
         
+        // Slide session forward by 30 mins on every active request
+        const newAccessToken = jwt.sign({ userId: decoded.userId }, process.env.JWT_SECRET, { expiresIn: '30m' });
+        const isProduction = process.env.NODE_ENV === 'production';
+        res.cookie('accessToken', newAccessToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            maxAge: 30 * 60 * 1000 // 30 minutes
+        });
+        
         next();
     } catch (e) {
         if (e.name === 'TokenExpiredError') {
