@@ -214,7 +214,7 @@ const updateVehicle = async (data, userId, vehicleId) => {
             await session.abortTransaction();
         }
         console.log(e)
-        throw new AppError("Failed to updated", 400)
+        throw new AppError("Failed to update", 400)
     } finally {
         session.endSession();
     }

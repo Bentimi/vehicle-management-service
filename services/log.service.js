@@ -46,7 +46,7 @@ const checkVehicle = async (data, userId) => {
             throw new AppError("Vehicle not found", 404)
         }
 
-        if (existingVehicle.isBlacklist) {
+        if (existingVehicle.isBlacklisted) {
             throw new AppError("Vehicle was blacklisted", 403)
         }
 
