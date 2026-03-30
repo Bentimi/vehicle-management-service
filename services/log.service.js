@@ -33,8 +33,8 @@ const checkVehicle = async (data, userId) => {
             }
         }
 
-        console.log(vehicleIdentifier)
-        
+        // console.log(vehicleIdentifier)
+
         let existingVehicle;
         if (mongoose.Types.ObjectId.isValid(vehicleIdentifier)) {
             existingVehicle = await Vehicle.findById(vehicleIdentifier).session(session);
@@ -69,7 +69,7 @@ const checkVehicle = async (data, userId) => {
             await log.save({ session })
         } else{
             const exitTime = new Date();
-            console.log(`Entry Time ${recentLog.entryTime}`);
+            // console.log(`Entry Time ${recentLog.entryTime}`);
             // const entryTime = new Date(recentLog.entryTime);
             const duration = Math.floor(
                 (exitTime - recentLog.entryTime) / (1000 * 60)
