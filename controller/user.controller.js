@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const client = require("../config/redis");
 const userService = require('../services/user.service');
+const User = require("../models/user.model");
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -23,7 +24,21 @@ const user_login = async (req, res, next) => {
         const user = loginResponse.user;
 
         const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '15m'
+        });
+
+        const newJti = uuidv4();
+        const newRefreshToken = jwt.sign({ userId: user._id, jti: newJti }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, {
             expiresIn: '30m'
+        });
+
+        await client.setEx(`refresh_token:${user._id}:${newJti}`, 30 * 60, '1');
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            maxAge: 7 * 24 * 60 * 1000 // 7 days
         });
 
         const csrfToken = uuidv4();
@@ -37,7 +52,7 @@ const user_login = async (req, res, next) => {
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? 'none' : 'lax',
-            maxAge: 30 * 60 * 1000 // 30 minutes
+            maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
         res.success({ user, csrfToken }, "Login successful")
@@ -47,9 +62,84 @@ const user_login = async (req, res, next) => {
 }
 
 const refresh_token = async (req, res, next) => {
-    // Sliding sessions now handle continuous rotation automatically on active requests.
-    // If the frontend calls this, it means the 30-minute inactivity limit was exceeded and they truly expired.
-    return res.status(401).json({ status: 'error', message: 'Session expired due to inactivity. Please login again.' });
+    try {
+        const { refreshToken } = req.cookies;
+        if (!refreshToken) {
+            return res.status(401).json({ status: 'error', message: 'No refresh token provided' });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({ status: 'error', message: 'Invalid refresh token' });
+        }
+
+        const { userId, jti } = decoded;
+
+        // Check Redis for JTI
+        const isValid = await client.get(`refresh_token:${userId}:${jti}`);
+
+        if (!isValid) {
+            // Token Reuse Detection
+            const keys = await client.keys(`refresh_token:${userId}:*`);
+            if (keys.length > 0) {
+                await client.del(keys); // Invalidate all refresh tokens for user
+            }
+            return res.status(403).json({ status: 'error', message: 'Token reuse detected. Please login again.' });
+        }
+
+        // Invalidate old JTI
+        await client.del(`refresh_token:${userId}:${jti}`);
+
+        const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
+            expiresIn: '15m'
+        });
+
+        const newJti = uuidv4();
+        const newRefreshToken = jwt.sign({ userId, jti: newJti }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, {
+            expiresIn: '7d'
+        });
+
+        await client.setEx(`refresh_token:${userId}:${newJti}`, 7 * 24 * 60, '1');
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            maxAge: 7 * 24 * 60 * 1000 // 7 days
+        });
+
+        const csrfToken = uuidv4();
+        res.cookie('csrfToken', csrfToken, {
+            httpOnly: false,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+        });
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.success({ csrfToken }, "Token refreshed successfully");
+    } catch (e) {
+        next(e);
+    }
+}
+
+const get_me = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user || (!user.active)) {
+            return res.status(401).json({ status: 'error', message: 'Account is inactive or not found.' });
+        }
+        res.success({ user }, "Session valid");
+    } catch (e) {
+        next(e);
+    }
 }
 
 const get_users = async (req, res, next) => {
@@ -67,6 +157,26 @@ const get_users = async (req, res, next) => {
 
 const user_logout = async (req, res, next) => {
     try {
+        const { refreshToken } = req.cookies;
+        if (refreshToken) {
+            try {
+                // Ignore expiration so we can delete the record even if the token just expired
+                const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, { ignoreExpiration: true });
+                const { userId, jti } = decoded;
+                if (userId && jti) {
+                    await client.del(`refresh_token:${userId}:${jti}`);
+                }
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax'
+        });
+
         res.clearCookie('accessToken', {
             httpOnly: true,
             secure: isProduction,
@@ -75,12 +185,6 @@ const user_logout = async (req, res, next) => {
         
         res.clearCookie('csrfToken', {
             httpOnly: false,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'lax'
-        });
-
-        res.clearCookie('accessToken', {
-            httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? 'none' : 'lax'
         });
@@ -114,6 +218,7 @@ const userActions = async (req, res, next) => {
 module.exports = {
     user_signUp,
     user_login,
+    get_me,
     refresh_token,
     user_logout,
     get_users,

@@ -9,6 +9,7 @@ router.post('/signup', validatedUser.validatedUserSchema, userController.user_si
 router.post('/login', validatedUser.validatedLoginSchema, userController.user_login);
 router.post('/logout', userController.user_logout);
 router.post('/refresh', userController.refresh_token);
+router.get('/me', requireAuth, userController.get_me);
 router.get('/get-users', requireAuth, userController.get_users);
 router.route('/:id')
 .get(requireAuth, userController.userActions)

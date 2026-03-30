@@ -85,6 +85,12 @@ const checkVehicle = async (data, userId) => {
         }
 
         await session.commitTransaction();
+
+        await log.populate([
+            { path: 'scannedBy', select: 'email first_name last_name' },
+            { path: 'vehicle', select: 'plate_number model vehicle_type color' }
+        ]);
+
         return log;
 
     } catch (e) {
