@@ -15,14 +15,10 @@ const checkVehicle = async (data, userId) => {
         throw new AppError("Unauthorized user", 403)
     }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    let vehicleIdentifier = data.vehicleId;
 
-    try {
-        let vehicleIdentifier = data.vehicleId;
-
-        // If the scanned data is a JSON string, extract the actual ID
-        if (typeof vehicleIdentifier === 'string' && vehicleIdentifier.trim().startsWith('{')) {
+    // If the scanned data is a JSON string, extract the actual ID
+    if (typeof vehicleIdentifier === 'string' && vehicleIdentifier.trim().startsWith('{')) {
             try {
                 const parsed = JSON.parse(vehicleIdentifier);
                 if (parsed.vehicleId) {
@@ -32,23 +28,28 @@ const checkVehicle = async (data, userId) => {
                 // Not valid JSON, keep it as is
             }
         }
-
+        
         // console.log(vehicleIdentifier)
-
+        
         let existingVehicle;
         if (mongoose.Types.ObjectId.isValid(vehicleIdentifier)) {
-            existingVehicle = await Vehicle.findById(vehicleIdentifier).session(session);
+            existingVehicle = await Vehicle.findById(vehicleIdentifier);
         } else {
-            existingVehicle = await Vehicle.findOne({ plate_number: vehicleIdentifier }).session(session);
+            existingVehicle = await Vehicle.findOne({ plate_number: vehicleIdentifier });
         }
-
+        
         if (!existingVehicle) {
             throw new AppError("Vehicle not found", 404)
         }
-
+        
         if (existingVehicle.isBlacklisted) {
             throw new AppError("Vehicle was blacklisted", 403)
         }
+        
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
 
         const recentLog = await Log.findOne(
             { 

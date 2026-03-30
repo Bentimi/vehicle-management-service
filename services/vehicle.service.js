@@ -4,6 +4,7 @@ const AppError = require("../utils/AppError.utils");
 const mongoose = require("mongoose");
 const cloudinary = require("../config/cloudinary");
 const QRCode = require("qrcode");
+const Log = require("../models/log.model");
 const { normalizePhoneNumber } = require("../utils/normalization.utils");
 
 
@@ -377,9 +378,18 @@ const getAllVehicles = async (page = 1, pageSize = 10, userId, search = "", owne
         .limit(pageSize)
         .lean();
 
+    const populatedVehicles = await Promise.all(vehicles.map(async (v) => {
+        const lastLog = await Log.findOne({ vehicle: v._id }).sort({ entryTime: -1 }).select('entryTime exitTime').lean();
+        return {
+            ...v,
+            lastEntry: lastLog ? lastLog.entryTime : null,
+            lastExit: lastLog ? lastLog.exitTime : null
+        };
+    }));
+
     const total = await Vehicle.countDocuments(query);
 
-    return { vehicles, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+    return { vehicles: populatedVehicles, total, page: parseInt(page), pageSize: parseInt(pageSize) };
 };
 
 module.exports = {
