@@ -1,8 +1,3 @@
-/**
- * Normalizes a phone number by removing leading '0' or '+234'.
- * @param {string} phone - The phone number to normalize.
- * @returns {string} The normalized phone number.
- */
 const normalizePhoneNumber = (phone) => {
     if (!phone) return phone;
     

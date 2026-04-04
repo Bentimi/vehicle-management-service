@@ -7,18 +7,19 @@ const userSchema = joi.object({
     email: joi.string().email().trim().required(),
     // phone_number: joi.string().trim().min(8).max(15).required(),
     gender: joi.string().trim().valid("male", "female", "other").required(),
-    password: joi.string().trim().min(8).pattern(new RegExp('^[a-zA-Z0-9]{8,20}$')).required()
+    password: joi.string().trim()
+    .min(8)
+    .max(30)
+    .required()
+    .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\\$%\\^&\\*])'))
     .messages({
-        'string.pattern.base': 'Password must be 8-20 characters long and contain only letters and numbers.'
+      'string.pattern.base': 'Password must include uppercase, lowercase, number, and a special character (!@#$%^&*)',
     })
 })
 
 const loginSchema = joi.object({
     email: joi.string().trim().email().required(),
-    password: joi.string().trim().min(8).pattern(new RegExp('^[a-zA-Z0-9]{8,20}$')).required()
-    .messages({
-        'string.pattern.base': 'Password must be 8-20 characters long and contain only letters and numbers.'
-    })
+    password: joi.string().trim().required()
 })
 
 const updateUserSchema = joi.object({
@@ -28,6 +29,18 @@ const updateUserSchema = joi.object({
     phone_number: joi.string().trim().allow('', null).optional(),
     gender: joi.string().trim().valid("male", "female", "other").allow('', null).optional(),
     marital_status: joi.string().trim().valid("married", "single", "divorced", "complicated").allow('', null).optional(),
+})
+
+const changePasswordSchema = joi.object({
+    oldPassword: joi.string().trim().required(),
+    newPassword: joi.string().trim()
+    .min(8)
+    .max(30)
+    .required()
+    .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\\$%\\^&\\*])'))
+    .messages({
+      'string.pattern.base': 'Password must include uppercase, lowercase, number, and a special character (!@#$%^&*)',
+    })
 })
 
 module.exports = {

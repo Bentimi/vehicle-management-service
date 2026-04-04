@@ -160,11 +160,74 @@ const updateProfile = async (userId, targetId, data) => {
     return { user: updatedUser }
 }
 
+const changePassword = async (userId, targetId, data) => {
+    const userAuth = await User.findById(userId);
+
+    if (!userAuth.active) {
+        throw new AppError("Account is not activated", 401);
+    }
+
+    if (!data.oldPassword || !data.newPassword) {
+        throw new AppError("Old and new passwords are required", 400);
+    }
+
+    const user = await User.findById(targetId);
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    const isMatch = await bcrypt.compare(data.oldPassword, user.password);
+    if (!isMatch) {
+        throw new AppError("Current password is incorrect", 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+
+    const samplePasswordCheck = await bcrypt.compare(data.newPassword, user.password);
+    if (samplePasswordCheck) {
+        throw new AppError("New password cannot be the same as the old password", 400);
+    }
+
+    user.password = hashedPassword;
+    await user.save();
+
+    return user;
+
+}
+
+const roleAllocation = async (userId, targetId, data) => {
+    const userAuth = await User.findById(userId);
+
+    if (!userAuth.active) {
+        throw new AppError("Account is not activated", 401);
+    }
+
+    if (userAuth.role !== "admin") {
+        throw new AppError("Unauthorized user", 403);
+    }
+
+    if (String(userAuth._id) === String(targetId)) {
+        throw new AppError("Admin cannot change their own role", 400);
+    }
+
+    const user = await User.findById(targetId);
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    user.role = data.role;
+    await user.save();
+
+    return user;
+
+}
 
 module.exports = {
     userSignUp,
     userLogin,
     getUsers,
     userProfile,
-    updateProfile
+    updateProfile,
+    changePassword,
+    roleAllocation
 }

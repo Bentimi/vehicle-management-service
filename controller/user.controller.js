@@ -215,6 +215,30 @@ const userActions = async (req, res, next) => {
     }
 }
 
+const change_password = async (req, res, next) => {
+    try { 
+        userId = req.user.id;
+        targetId = req.params.id;
+        data = req.body;
+        const result = await userService.changePassword(userId, targetId, req.body);
+        res.success(result, "Password changed successfully")
+    } catch (e) {
+        next(e);
+    }
+}
+
+const role_allocation = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const targetId = req.params.id;
+        const data = req.body;
+        const result = await userService.roleAllocation(userId, targetId, data);
+        res.success(result, "User role updated successfully")
+    } catch (e) {
+        next(e);
+    }
+}
+
 module.exports = {
     user_signUp,
     user_login,
@@ -222,5 +246,7 @@ module.exports = {
     refresh_token,
     user_logout,
     get_users,
-    userActions
+    userActions,
+    change_password,
+    role_allocation
 }
