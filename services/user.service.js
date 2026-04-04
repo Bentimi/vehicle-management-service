@@ -150,7 +150,7 @@ const updateProfile = async (userId, targetId, data) => {
             gender: data.gender,
             marital_status: data.marital_status
         },
-        { new: true }
+        { returnDocument: "after" }
     )
 
     if (!updatedUser) {
