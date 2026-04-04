@@ -217,9 +217,9 @@ const userActions = async (req, res, next) => {
 
 const change_password = async (req, res, next) => {
     try { 
-        userId = req.user.id;
-        targetId = req.params.id;
-        data = req.body;
+        const userId = req.user.id;
+        const targetId = req.params.id;
+        const data = req.body;
         const result = await userService.changePassword(userId, targetId, req.body);
         res.success(result, "Password changed successfully")
     } catch (e) {
