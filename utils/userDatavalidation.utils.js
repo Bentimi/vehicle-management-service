@@ -43,8 +43,14 @@ const changePasswordSchema = joi.object({
     })
 })
 
+const roleAllocationSchema = joi.object({
+    role: joi.string().trim().valid("admin", "cso", "staff", "user").required()
+})
+
 module.exports = {
         validatedUserSchema : validate(userSchema),
         validatedLoginSchema: validate(loginSchema),
-        validatedUpdateUserSchema: validate(updateUserSchema)
+        validatedUpdateUserSchema: validate(updateUserSchema),
+        validatedChangePasswordSchema: validate(changePasswordSchema),
+        validatedRoleAllocationSchema: validate(roleAllocationSchema)
 }

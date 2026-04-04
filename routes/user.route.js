@@ -14,5 +14,7 @@ router.get('/get-users', requireAuth, userController.get_users);
 router.route('/:id')
 .get(requireAuth, userController.userActions)
 .put(requireAuth, validatedUser.validatedUpdateUserSchema, userController.userActions)
+router.put('change-password/:id', requireAuth, validatedUser.validatedChangePasswordSchema, userController.change_password)
+router.put('allocate-role/:id', requireAuth, validatedUser.validatedRoleAllocationSchema, userController.allocate_role)
 
 module.exports = router;
