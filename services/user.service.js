@@ -196,6 +196,11 @@ const changePassword = async (userId, targetId, data) => {
 }
 
 const roleAllocation = async (userId, targetId, data) => {
+    console.log('Role allocation service called');
+    console.log('User ID:', userId);
+    console.log('Target ID:', targetId);
+    console.log('Data:', data);
+
     const userAuth = await User.findById(userId);
 
     if (!userAuth.active) {
@@ -210,7 +215,10 @@ const roleAllocation = async (userId, targetId, data) => {
         throw new AppError("Admin cannot change their own role", 400);
     }
 
+    console.log('Target ID:', targetId);
+
     const user = await User.findById(targetId);
+    console.log('User', user)
     if (!user) {
         throw new AppError("User not found", 404);
     }

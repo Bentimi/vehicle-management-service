@@ -44,7 +44,7 @@ const changePasswordSchema = joi.object({
 })
 
 const roleAllocationSchema = joi.object({
-    role: joi.string().trim().valid("admin", "cso", "staff", "user").required()
+    role: joi.string().trim().valid("admin", "cso", "staff", "user", "security").required()
 })
 
 module.exports = {

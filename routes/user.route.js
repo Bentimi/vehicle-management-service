@@ -11,10 +11,12 @@ router.post('/logout', userController.user_logout);
 router.post('/refresh', userController.refresh_token);
 router.get('/me', requireAuth, userController.get_me);
 router.get('/get-users', requireAuth, userController.get_users);
+
+router.put('/change-password/:id', requireAuth, validatedUser.validatedChangePasswordSchema, userController.change_password);
+router.put('/allocate-role/:id', requireAuth, validatedUser.validatedRoleAllocationSchema, userController.role_allocation);
+
 router.route('/:id')
 .get(requireAuth, userController.userActions)
 .put(requireAuth, validatedUser.validatedUpdateUserSchema, userController.userActions)
-router.put('change-password/:id', requireAuth, validatedUser.validatedChangePasswordSchema, userController.change_password)
-router.put('allocate-role/:id', requireAuth, validatedUser.validatedRoleAllocationSchema, userController.role_allocation)
 
 module.exports = router;
