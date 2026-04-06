@@ -37,21 +37,21 @@ const user_login = async (req, res, next) => {
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
             secure: isProduction,
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 1000 // 7 days
+            sameSite: isProduction ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         const csrfToken = uuidv4();
         res.cookie('csrfToken', csrfToken, {
             httpOnly: true,
             secure: isProduction,
-            sameSite: 'strict',
+            sameSite: isProduction ? 'none' : 'strict',
         });
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: isProduction,
-            sameSite: 'strict',
+            sameSite: isProduction ? 'none' : 'strict',
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
@@ -100,26 +100,27 @@ const user_logout = async (req, res, next) => {
                     await client.del(`refresh_token:${userId}:${jti}`);
                 }
             } catch (err) {
-                next(err);
+                // Swallow decode errors — still clear cookies below
+                console.error('Logout token decode error (non-fatal):', err.message);
             }
         }
 
         res.clearCookie('refreshToken', {
             httpOnly: true,
             secure: isProduction,
-            sameSite: 'strict'
+            sameSite: isProduction ? 'none' : 'strict'
         });
 
         res.clearCookie('accessToken', {
             httpOnly: true,
             secure: isProduction,
-            sameSite: 'strict'
+            sameSite: isProduction ? 'none' : 'strict'
         });
         
         res.clearCookie('csrfToken', {
             httpOnly: true,
             secure: isProduction,
-            sameSite: 'strict'
+            sameSite: isProduction ? 'none' : 'strict'
         });
 
         res.success(null, "Logged out successfully");
