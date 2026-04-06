@@ -55,15 +55,6 @@ const user_login = async (req, res, next) => {
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
-        // Readable (non-HttpOnly) flag so the frontend knows a session exists
-        // without exposing any token value to JS.
-        res.cookie('logged_in', '1', {
-            httpOnly: false,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'strict',
-            maxAge: 15 * 60 * 1000 // mirrors accessToken lifetime
-        });
-
         res.success({ user }, "Login successful")
     } catch (e) {
         next(e);
@@ -132,12 +123,6 @@ const user_logout = async (req, res, next) => {
             sameSite: isProduction ? 'none' : 'strict'
         });
 
-        res.clearCookie('logged_in', {
-            httpOnly: false,
-            secure: isProduction,
-            sameSite: isProduction ? 'none' : 'strict'
-        });
-
         res.success(null, "Logged out successfully");
     } catch (e) {
         next(e);
@@ -188,11 +173,49 @@ const role_allocation = async (req, res, next) => {
     }
 }
 
+const refresh_token = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.cookies;
+        if (!refreshToken) {
+            return res.status(401).json({ status: 'error', message: 'No refresh token.' });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({ status: 'error', message: 'Refresh token invalid or expired.' });
+        }
+
+        const { userId, jti } = decoded;
+        // Check the token is still in Redis (not revoked)
+        const exists = await client.get(`refresh_token:${userId}:${jti}`);
+        if (!exists) {
+            return res.status(401).json({ status: 'error', message: 'Session revoked. Please login again.' });
+        }
+
+        // Issue a fresh access token
+        const newAccessToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
+
+        res.cookie('accessToken', newAccessToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'strict',
+            maxAge: 15 * 60 * 1000
+        });
+
+        res.success(null, 'Token refreshed');
+    } catch (e) {
+        next(e);
+    }
+};
+
 module.exports = {
     user_signUp,
     user_login,
     get_me,
     user_logout,
+    refresh_token,
     get_users,
     userActions,
     change_password,
