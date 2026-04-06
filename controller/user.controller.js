@@ -55,6 +55,15 @@ const user_login = async (req, res, next) => {
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
+        // Readable (non-HttpOnly) flag so the frontend knows a session exists
+        // without exposing any token value to JS.
+        res.cookie('logged_in', '1', {
+            httpOnly: false,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'strict',
+            maxAge: 15 * 60 * 1000 // mirrors accessToken lifetime
+        });
+
         res.success({ user }, "Login successful")
     } catch (e) {
         next(e);
@@ -119,6 +128,12 @@ const user_logout = async (req, res, next) => {
         
         res.clearCookie('csrfToken', {
             httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'strict'
+        });
+
+        res.clearCookie('logged_in', {
+            httpOnly: false,
             secure: isProduction,
             sameSite: isProduction ? 'none' : 'strict'
         });
