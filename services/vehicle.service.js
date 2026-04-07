@@ -39,7 +39,7 @@ const registerVehicle = async (data, userId) => {
     }
 
     if (!existingUser) {
-        throw new AppError("User not found", 404);
+        throw new AppError("Invalide user credentials", 404);
     }
 
     // Prevent duplicate plate numbers

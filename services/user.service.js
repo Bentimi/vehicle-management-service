@@ -140,6 +140,28 @@ const updateProfile = async (userId, targetId, data) => {
         throw new AppError("First name, last name, and email are required", 400);
     }
 
+    const existingEmail = await User.findOne({ 
+        email: data.email, _id: 
+        { 
+            $ne: targetId 
+        } 
+    });
+
+    if (existingEmail) {
+        throw new AppError("Email already exists", 409);
+    }
+
+    const existingPhone = await User.findOne({ 
+        phone_number: normalizePhoneNumber(data.phone_number), _id: 
+        { 
+            $ne: targetId 
+        } 
+    });
+
+    if (existingPhone) {
+        throw new AppError("Phone number already exists", 409);
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
         targetId,
         {
