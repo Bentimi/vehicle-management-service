@@ -28,6 +28,8 @@ const createRateLimiterMiddleware = (name, points, duration, keyGenerator) => {
         try {
             const rateLimiterRes = await rateLimiter.consume(clientKey);
 
+            console.log(`[RateLimiter] ${name}: Allowed ${clientKey}, remaining: ${rateLimiterRes.remainingPoints}`);
+
             res.set({
                 "X-RateLimit-Limit": points,
                 "X-RateLimit-Remaining": rateLimiterRes.remainingPoints,
@@ -43,6 +45,8 @@ const createRateLimiterMiddleware = (name, points, duration, keyGenerator) => {
                 );
                 return next();
             }
+
+            console.log(`[RateLimiter] ${name}: Blocked ${clientKey}`);
 
             const totalSeconds = Math.round(rejRes.msBeforeNext / 1000) || 1;
             const minutes = Math.floor(totalSeconds / 60);
